@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -43,10 +44,13 @@ public class WorkWithFiles {
      * @param destinationFile - целевой файл
      */
     public void warningsPrinting(Path sourceFile, Path destinationFile) throws IOException {
-        Predicate<String> stringPredicate = s -> s.startsWith("WARN");
+        final String key = "WARN ";
+        Predicate<String> stringPredicate = s -> s.startsWith(key);
+        Function<String , String> substringFunction = s -> s.substring(key.length());
 
         String content = Files.readAllLines(sourceFile).stream()
                 .filter(stringPredicate)
+                .map(substringFunction)
                 .collect(Collectors.joining("\n"));
 
         Files.write(destinationFile, content.getBytes());
@@ -60,17 +64,18 @@ public class WorkWithFiles {
      */
     public boolean copyFile(Path path) {
         Path dstPath = getCopyPath(path);
+
         try {
             Files.copy(path, dstPath);
+            return true;
         } catch (IOException e) {
             return false;
         }
-        return true;
     }
 
     private Path getCopyPath(Path path) {
-        String dstName = "Copy" + path.toFile().getName();
-        return path.resolveSibling(Paths.get(dstName));
+        Path dstName = Paths.get("Copy" + path.getFileName());
+        return path.resolveSibling(dstName);
     }
 
 }

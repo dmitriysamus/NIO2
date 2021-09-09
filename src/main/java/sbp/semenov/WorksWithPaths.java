@@ -5,10 +5,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.nio.file.attribute.FileTime;
 
 public class WorksWithPaths {
+    public static void main(String[] args) throws IOException {
+        new WorksWithPaths().workWithPath("src/test/resources/logs.log");
+    }
+
     /**
      * Создать объект класса {@link Path}, проверить существование и чем является (файл или директория).
      * Если сущность существует, то вывести в консоль информацию:
@@ -25,17 +28,17 @@ public class WorksWithPaths {
     public boolean workWithPath(String fileName) throws IOException {
         Path path = Paths.get(fileName);
 
-        if (!path.toFile().exists()) {
+        if (!Files.exists(path)) {
             Files.createFile(path);
         }
 
-        if (!path.toFile().exists()) {
+        if (!Files.exists(path)) {
             return false;
         }
 
         printPathPaths(path);
 
-        if (path.toFile().isFile()) {
+        if (Files.isRegularFile(path)) {
             printPathInfo(path);
         }
 
@@ -43,29 +46,18 @@ public class WorksWithPaths {
     }
 
     public void printPathPaths(Path path) {
-        File file = path.toFile();
-
-        String absolutePath = file.getAbsolutePath();
+        Path absolutePath = path.toAbsolutePath();
         System.out.printf("Absolute path: %s\n", absolutePath);
 
-        String parentPath = file.getParent();
+        String parentPath = absolutePath.getParent() + "";
         System.out.printf("Parent path: %s\n", parentPath);
     }
 
-    public void printPathInfo(Path path) {
-        File file = path.toFile();
-
-        long fileSize = file.length();
+    public void printPathInfo(Path path) throws IOException {
+        long fileSize = Files.size(path);
         System.out.printf("Files size: %d\n", fileSize);
 
-        long lastModified = file.lastModified();
-        String formattedTime = getFormattedTime(lastModified);
-        System.out.printf("Date of last modification: %s\n", formattedTime);
-    }
-
-    private String getFormattedTime(long time) {
-        Date date = new Date(time);
-        SimpleDateFormat formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        return formatter.format(date);
+        FileTime lastModified = Files.getLastModifiedTime(path);
+        System.out.printf("Date of last modification: %s\n", lastModified);
     }
 }

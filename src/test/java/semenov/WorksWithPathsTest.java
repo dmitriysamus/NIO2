@@ -40,5 +40,6 @@ public class WorksWithPathsTest{
 
         Assertions.assertEquals(expected, actual);
         Assertions.assertTrue(returnBool);
+
     }
 }

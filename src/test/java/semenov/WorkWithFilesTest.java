@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import sbp.semenov.WorkWithFiles;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
@@ -21,7 +20,7 @@ public class WorkWithFilesTest {
 
     private final Path pathToWalk = Paths.get("src");
     private final Path srcPath = Paths.get("src/test/resources/logs.log");
-    private Path dstPath = getCopyPath(srcPath);
+    private final Path dstPath = getCopyPath(srcPath);
 
     @BeforeEach
     private void catchOutput() {
@@ -39,11 +38,11 @@ public class WorkWithFilesTest {
      */
     @Test
     public void walkingDirectoryTest() throws IOException {
-        int expected = countFilesWithRecursion(pathToWalk.toFile());
+        int expected = countFilesWithRecursion(pathToWalk);
 
         workWithFiles.walkingDirectory(pathToWalk);
         String output = out.toString().trim();
-        int actual = Integer.valueOf(output);
+        int actual = Integer.parseInt(output);
 
         Assertions.assertEquals(expected, actual);
     }
@@ -53,8 +52,8 @@ public class WorkWithFilesTest {
      */
     @Test
     public void warningsPrintingTest() throws IOException {
-        String expected = "WARN No database could be detected\r\n" +
-                "WARN Performing manual recovery";
+        String expected = "No database could be detected\r\n" +
+                "Performing manual recovery";
 
         workWithFiles.warningsPrinting(srcPath, dstPath);
         Assertions.assertTrue(dstPath.toFile().exists());
@@ -69,10 +68,7 @@ public class WorkWithFilesTest {
     @Test
     public void copyFileTest() throws IOException {
         String expected = getContentFromFile(srcPath);
-
-        if (dstPath.toFile().exists()) {
-            Files.delete(dstPath);
-        }
+        Files.deleteIfExists(dstPath);
 
         workWithFiles.copyFile(srcPath);
         Assertions.assertTrue(dstPath.toFile().exists());
@@ -82,31 +78,28 @@ public class WorkWithFilesTest {
     }
 
 
-    private int countFilesWithRecursion(File file) {
-        if (!file.isDirectory()) {
+    private int countFilesWithRecursion(Path path) {
+        if (Files.isRegularFile(path)) {
             return 1;
         }
 
-        int sum = 0;
-        for (File tempFile : file.listFiles()) {
-            sum += countFilesWithRecursion(tempFile);
+        try {
+            return Files.list(path)
+                    .map(p -> countFilesWithRecursion(p))
+                    .reduce(0, Integer::sum);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 0;
         }
-
-        return sum;
-    }
-
-    private String[] getOutputArray() {
-        String output = out.toString();
-        return output.split("[\r]\n");
     }
 
     private Path getCopyPath(Path path) {
-        String dstName = "Copy" + path.toFile().getName();
+        String dstName = "Copy" + path.getFileName();
         return path.resolveSibling(Paths.get(dstName));
     }
 
     private String getContentFromFile(Path path) throws IOException {
-        return Files.readAllLines(path).stream()
+        return Files.lines(path)
                 .collect(Collectors.joining("\r\n"));
     }
 }
