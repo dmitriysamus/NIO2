@@ -1,6 +1,13 @@
 package samus;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class WorkWithFiles
 {
@@ -11,9 +18,15 @@ public class WorkWithFiles
      */
     public void walkingDirectory(Path path)
     {
-        /*
-        ...
-         */
+        if (path == null) {
+            return;
+        }
+
+        try (Stream<Path> files = Files.list(path)) {
+            System.out.println(files.count());
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
     }
 
     /**
@@ -30,9 +43,29 @@ public class WorkWithFiles
      */
     public void warningsPrinting(Path sourceFile, Path destinationFile)
     {
-        /*
-        ...
-         */
+        if (sourceFile == null || destinationFile == null) {
+            return;
+        }
+
+        try {
+            String forSourceFile  = Files.lines(sourceFile)
+                    .filter(s -> s.startsWith("WARN"))
+                    .map(s -> s + "\n")
+                    .collect(Collectors.toList())
+                    .toString()
+                    .replace("[", "")
+                    .replace("]", "")
+                    .replace(", ", "");
+
+            try (BufferedWriter writer = Files.newBufferedWriter(destinationFile, Charset.defaultCharset())) {
+                writer.write(forSourceFile);
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
     }
 
     /**
@@ -42,9 +75,20 @@ public class WorkWithFiles
      */
     public boolean copyFile(Path path)
     {
-        /*
-        ...
-         */
+        if (path == null) {
+            return false;
+        }
+
+        if (path.toFile().exists()) {
+            Path copy = path.getParent().resolve(Paths.get(path.getFileName() + "_copy"));
+
+            try {
+                Files.copy(path, copy);
+                return true;
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+        }
         return false;
     }
 }
