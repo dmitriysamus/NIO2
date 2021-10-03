@@ -55,7 +55,8 @@ public class WorkWithFiles
                     .toString()
                     .replace("[", "")
                     .replace("]", "")
-                    .replace(", ", "");
+                    .replace(", ", "")
+                    ;
 
             try (BufferedWriter writer = Files.newBufferedWriter(destinationFile, Charset.defaultCharset())) {
                 writer.write(forSourceFile);
